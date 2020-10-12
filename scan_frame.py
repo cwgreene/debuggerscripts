@@ -30,6 +30,13 @@ class ScanCommand(gdb.Command):
         # x-64 specific
         bottom_of_stack = int(gdb.parse_and_eval("$rsp"))
         top_of_stack = int(gdb.parse_and_eval("$rbp"))
+        args = arg.split(" ")
+        if len(args) > 0:
+            if len(args) == 1:
+                top_of_stack = int(args[0], 16)
+            if len(args) == 2:
+                bottom_of_stack = int(args[0],16)
+                top_of_stack = int(args[1], 16)
         proc = gdb.inferiors()[0]
         mappings = vmmap()
         for i in range((top_of_stack-bottom_of_stack)//8):

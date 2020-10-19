@@ -30,7 +30,8 @@ class ScanCommand(gdb.Command):
         # x-64 specific
         bottom_of_stack = int(gdb.parse_and_eval("$rsp"))
         top_of_stack = int(gdb.parse_and_eval("$rbp"))
-        args = arg.split(" ")
+        args = arg.strip().split(" ") # should do better parsing here
+        args = [arg for arg in args if arg != ''] # deal with empty arguments
         if len(args) > 0:
             if len(args) == 1:
                 top_of_stack = int(args[0], 16)

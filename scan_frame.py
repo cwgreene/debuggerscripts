@@ -1,18 +1,23 @@
 import gdb
 import struct
 import colorama
+import re
+
+def clean_int(string):
+    if (idx := string.index("\x1b")) != -1:
+        string = re.findall("0x[0-9af]+", string)[0]
+    return int(string, 16)
 
 def vmmap():
     result = []
     mappings = gdb.execute("vmmap", from_tty=False, to_string=True).split("\n")
-    mappings = [m.split() for m in mappings[1:]]
+    mappings = [m.split() for m in mappings[2:]]
     for mapping in mappings:
         if len(mapping) < 4:
             continue
         if len(mapping) < 5:
             mapping = mapping + ["?"]
-        #print(mapping[0], mapping[1])
-        result.append([int(mapping[0], 16), int(mapping[1], 16), mapping[-1]])
+        result.append([clean_int(mapping[0]), clean_int(mapping[1]), mapping[-1]])
     return result
 
 def find_mapping(addr, mappings):
@@ -40,6 +45,7 @@ class ScanCommand(gdb.Command):
                 top_of_stack = int(args[1], 16)
         proc = gdb.inferiors()[0]
         mappings = vmmap()
+        print(hex(bottom_of_stack), hex(top_of_stack), top_of_stack-bottom_of_stack)
         for i in range((top_of_stack-bottom_of_stack)//8):
             qword = proc.read_memory(bottom_of_stack+8*i, 8)
             value = struct.unpack("Q", qword.tobytes())[0]

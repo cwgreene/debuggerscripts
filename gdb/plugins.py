@@ -36,13 +36,18 @@ class Plugins(gdb.Command):
             if plugin_file.is_file():
                 name = plugin_file.name
                 if name in self.loaded:
-                    print("* ",end="")
+                    print("*",end="")
+                else:
+                    print(" ",end="")
                 print(name)
 
     def load(self, file):
         pth = self.plugin_dir / file
         if pth.exists():
             gdb.execute(f"source {pth}")
+            self.loaded.append(pth.name)
+        else:
+            print(f"{pth} does not exist")
 
     def invoke(self, arg, from_tty):
         args = shlex.split(arg)

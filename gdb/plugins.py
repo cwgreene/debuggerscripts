@@ -10,7 +10,7 @@ class LocalParser(argparse.ArgumentParser):
     def error(self, message):
         self.print_help(sys.stderr)
         #self.exit(2, '%s: error: %s\n' % (self.prog, message))
-        return None
+        raise Exception("Nope")
 
 class Plugins(gdb.Command):
 
@@ -52,7 +52,10 @@ class Plugins(gdb.Command):
     def invoke(self, arg, from_tty):
         args = shlex.split(arg)
 
-        options = self.parser.parse_args(args)
+        try:
+            options = self.parser.parse_args(args)
+        except:
+            return
 
         if not options:
             return
@@ -61,6 +64,31 @@ class Plugins(gdb.Command):
             self.list()
         if options.load:
             self.load(options.file)
+
+    # ick.
+    def complete(self, text, word):
+        # Example: autocomplete elements from a fixed list
+        options = ['list', 'load']
+        # Return all options that start with the provided word
+        s = shlex.split(text)
+        if len(s) > 0:
+            if s[0] == "list":
+                return []
+            if s[0] == "load":
+                plugins = []
+                for plugin_file in self.plugin_dir.iterdir():
+                    if plugin_file.is_file():
+                        plugins.append(plugin_file.name)
+                if word:
+                    return [plugin for plugin in plugins if plugin.startswith(word)]
+                else:
+                    return [plugins]
+            else:
+                if word:
+                    return [option for option in options if option.startswith(word)]
+                else:
+                    return options
+        return options
             
 # Register the command with GDB
 Plugins()

@@ -37,8 +37,40 @@ class PrintPariGen(gdb.Command):
         }
     inv_types_dict = {k:v for (v,k) in types_dict.items()}
 
+    def lgbits(self, n):
+
+    def print_int(self, addr, header):
+        print(f'{self.inv_types_dict[type_num]}')
+        print("int")
+
+
     def __init__(self):
         super(PrintPariGen, self).__init__("ppgen", gdb.COMMAND_USER)
+        self.ptype_dict = {
+              "t_INT"      :  lambda x: self.print_int(x),
+              "t_REAL"     :  None,
+              "t_INTMOD"   :  None,
+              "t_FRAC"     :  None,
+              "t_FFELT"    :  None,
+              "t_COMPLEX"  :  None,
+              "t_PADIC"    :  None,
+              "t_QUAD"     :  None,
+              "t_POLMOD"   :  None,
+              "t_POL"      :  None,
+              "t_SER"      :  None,
+              "t_RFRAC"    :  None,
+              "t_QFB"      :  None,
+              "t_VEC"      :  None,
+              "t_COL"      :  None,
+              "t_MAT"      :  None,
+              "t_LIST"     :  None,
+              "t_STR"      :  None,
+              "t_VECSMALL" :  None,
+              "t_CLOSURE"  :  None,
+              "t_ERROR"    :  None,
+              "t_INFINITY" :  None
+            }
+
 
     def invoke(self, arg, from_tty):
         # Parse the argument as an address
@@ -47,8 +79,9 @@ class PrintPariGen(gdb.Command):
         # Read 16 bytes from the specified address
         inferior = gdb.selected_inferior()
         gen_type = inferior.read_memory(address, 8)
-        type_num = u64(gen_type) >> (64-7)
-        print(f'{self.inv_types_dict[type_num]}')
+        header = u64(gen_type)
+        type_num = header >> (64-7)
+        self.ptype_dict[self.inv_types_dict[type_num]](address, header)
 
 # Register the command with GDB
 PrintPariGen()
